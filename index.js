@@ -104,7 +104,7 @@ const start = async () => {
     await loginPage();
 
     await wait( 3 * SECOND );
-    await driver.get(`https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=${searchTerm}&location=${searchArea}`);
+    await driver.get(`https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=${searchTerm}&location=${searchArea}&sortBy=DD`);
 
     await wait( 2 * SECOND );
 
