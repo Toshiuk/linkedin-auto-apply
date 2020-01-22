@@ -38,7 +38,11 @@ const loginPage = async () => {
 
 const jobsList = async () => {
     await driver.wait( until.elementsLocated( By.className( "artdeco-pagination__pages" ) ), 20 * SECOND );
-    const pages = await driver.findElement( By.className( "artdeco-pagination__pages" ) ).findElements( By.tagName( "li" ) );
+    let pages = new Array(1);
+    const pagesList = await driver.findElements( By.className( "artdeco-pagination__pages" ) );
+    if( pagesList.length !== 0 ){ 
+         pages = await pagesList[0].findElements( By.tagName( "li" ) );
+    } 
     
     for( let j = 1; j <= pages.length ; j++ ){
         await wait( 2 * SECOND );
