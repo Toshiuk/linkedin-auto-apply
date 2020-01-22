@@ -1,6 +1,6 @@
 import { Builder, By, Key, until, promise } from 'selenium-webdriver';
 const SECOND = 1000;
-const driver = new Builder().forBrowser( 'chrome' ).build();
+const driver = new Builder().withCapabilities({ browserName: 'chrome', chromeOptions: { w3c: false } }).build();
 const wait = (delay, ...args) => new Promise(resolve => setTimeout(resolve, delay, ...args));
 
 const username = "email@email.com";
