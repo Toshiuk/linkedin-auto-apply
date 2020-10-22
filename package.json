@@ -9,10 +9,14 @@
     "start": "babel-node index.js"
   },
   "dependencies": {
+    "dotenv": "^8.2.0",
     "selenium-webdriver": "^4.0.0-alpha.5"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1"
+    "babel-preset-es2015": "^6.24.1",
+    "eslint": "^7.11.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1"
   }
 }
