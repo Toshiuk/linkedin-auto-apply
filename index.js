@@ -1,118 +1,160 @@
-import { Builder, By, Key, until, promise } from 'selenium-webdriver';
-const SECOND = 1000;
-const driver = new Builder().withCapabilities({ browserName: 'chrome', chromeOptions: { w3c: false } }).build();
-const wait = (delay, ...args) => new Promise(resolve => setTimeout(resolve, delay, ...args));
+/* eslint-disable no-console */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable guard-for-in */
+import {
+  Builder, By, until,
+} from 'selenium-webdriver';
 
-const username = "email@email.com";
-const password = "senha";
+import {
+  SECOND, password, searchArea, searchTerm, username,
+} from './constants';
 
-const searchTerm = "react".replace( " ", "%20" );
-const searchArea = "inglaterra".replace( " ", "%20" );
+import {
+  waitSeconds, hideById,
+} from './util';
+
+const driver = new Builder().withCapabilities({
+  browserName: 'chrome',
+  chromeOptions: {
+    w3c: false,
+  },
+}).build();
+
+function waitUntilElementLocated(className, delay) {
+  driver.wait(until.elementsLocated(By.className(className), delay));
+};
+
+function findElementByClassName(className) {
+  driver.findElement(By.className(className))
+}
 
 let totalApplied = 0;
 
-const insertFieldById = async ( id, value ) => {
-    await driver.wait( until.elementsLocated( By.id( id ) ), 20 * SECOND );
+async function insertFieldById(id, value) {
+  await driver.wait(until.elementsLocated(By.id(id)), 20 * SECOND);
 
-    const field = driver.findElement( By.id( id ) );
+  const field = driver.findElement(By.id(id));
 
-    await field.clear();
-    await wait( 1 * SECOND );
-    await field.sendKeys( value );
+  await field.clear();
+  await waitSeconds(1);
+  await field.sendKeys(value);
 }
 
-const hideById = ( id ) => {
-    driver.executeScript(`document.querySelector('#${id}').setAttribute('style', 'display: none')`);
+async function loginPage() {
+  await insertFieldById('username', username);
+
+  await insertFieldById('password', password);
+
+  const passwordField = driver.findElement(By.id('password'));
+
+  await waitSeconds(2);
+  await passwordField.submit();
 }
 
-const loginPage = async () => {
-    await insertFieldById( "username", username );
+async function applyToJobs(pages) {
+  for (const j in pages) {
+    await waitSeconds(2);
 
-    await insertFieldById( "password", password );
+    hideById('msg-overlay');
 
-    const passwordField = driver.findElement( By.id( "password" ) );
+    await waitUntilElementLocated('jobs-search-results__list', 20 * SECOND);
 
-    await wait( 2 * SECOND );
-    await passwordField.submit();
-}
+    const jobs = await findElementByClassName('jobs-search-results__list').findElements(By.tagName('li'));
 
-const jobsList = async () => {
-    await driver.wait( until.elementsLocated( By.className( "artdeco-pagination__pages" ) ), 20 * SECOND );
-    let pages = new Array(1);
-    const pagesList = await driver.findElements( By.className( "artdeco-pagination__pages" ) );
-    if( pagesList.length !== 0 ){ 
-         pages = await pagesList[0].findElements( By.tagName( "li" ) );
-    } 
-    
-    for( let j = 1; j <= pages.length ; j++ ){
-        await wait( 2 * SECOND );
-        hideById( "msg-overlay" );
-        await driver.wait( until.elementsLocated( By.className( "jobs-search-results__list" ) ), 20 * SECOND );
-        const jobs = await driver.findElement( By.className( "jobs-search-results__list" ) ).findElements( By.tagName( "li" ) );
-        for( let i = 0; i < jobs.length ; i++ ){
-            await wait( 1 * SECOND );
-            const job = await jobs[i].findElements( By.className( "job-card-search__title" ) );
-            if( job.length !== 0 ){
-                job[0].click();
-                await wait( 2 * SECOND );
-                const alreadyApplied = await driver.findElements( By.className( "jobs-s-apply__applied-date" ) );
-                if( alreadyApplied.length === 0 ){
-                    console.log("Aplicando vaga...")
-                    await wait( 2 * SECOND );
-                    await driver.wait( until.elementsLocated( By.className( "jobs-apply-button" ) ), 20 * SECOND );
-                    await driver.findElement( By.className( "jobs-apply-button" ) ).click();
-                    await wait( 1 * SECOND );
-                    await driver.wait( until.elementsLocated( By.className( "jobs-easy-apply-footer__actions" ) ), 20 * SECOND );
-                    const progressBar = await driver.findElements( By.className( "jobs-easy-apply-content__progress-bar" ) );
-                    if( progressBar.length === 0 ){ 
-                        const applyButton = await driver.findElement( By.className( "jobs-easy-apply-footer__actions" ) ).findElement( By.tagName( "button" ) );
-                        applyButton.click();
-                        job[0].findElement( By.tagName( "a" ) ).getText().then( jobName => console.log( `Vaga aplicada para ${jobName}` ) );
-                        await wait( 2 * SECOND );
-                        totalApplied++;
-                    } else {
-                        console.log( "Pulando vaga, existem muitas etapas para poder aplicar" );
-                        driver.findElement( By.className( "artdeco-modal__dismiss" ) ).click();
-                        await driver.wait( until.elementsLocated( By.className( "artdeco-modal__actionbar" ) ), 20 * SECOND );
-                        const cancelButton = await driver.findElement( By.className( "artdeco-modal__actionbar" ) ).findElements( By.tagName( "button" ) );
-                        cancelButton[1].click();
-                        await wait( 1 * SECOND );
-                    }
-                } else {
-                    console.log("Vaga já aplicada!");
-                }
-            } 
-        } 
+    for (const i in jobs) {
+      await waitSeconds(1);
 
-        if ( j < pages.length ) {
-            await wait( 1 * SECOND );
-            console.log("Indo para proxima página!");
-            pages[j].click();
-            await wait( 2 * SECOND );
+      const job = await jobs[i].findElements(By.className('job-card-search__title'));
+
+      if (job.length !== 0) {
+        job[0].click();
+        await waitSeconds(2);
+
+        const alreadyApplied = await driver.findElements(By.className('jobs-s-apply__applied-date'));
+
+        if (alreadyApplied.length === 0) {
+          console.log('Aplicando vaga...');
+
+          await waitSeconds(2);
+
+          await waitUntilElementLocated('jobs-apply-button', 20 * SECOND);
+          await findElementByClassName('jobs-apply-button').click();
+
+          await waitSeconds(1);
+
+          await waitUntilElementLocated('jobs-easy-apply-footer__actions', 20 * SECOND);
+
+          const progressBar = await driver.findElements(By.className('jobs-easy-apply-content__progress-bar'));
+
+          if (progressBar.length === 0) {
+            const applyButton = await findElementByClassName('jobs-easy-apply-footer__actions')).findElement(By.tagName('button'));
+
+            applyButton.click();
+
+            job[0].findElement(By.tagName('a')).getText().then((jobName) => console.log(`Vaga aplicada para ${jobName}`));
+
+            await waitSeconds(2);
+
+            totalApplied++;
+          } else {
+            console.log('Pulando vaga, existem muitas etapas para poder aplicar');
+
+            findElementByClassName('artdeco-modal__dismiss').click();
+
+            await waitUntilElementLocated('artdeco-modal__actionbar', 20 * SECOND);
+
+            const cancelButton = await findElementByClassName('artdeco-modal__actionbar').findElements(By.tagName('button'));
+
+            cancelButton[1].click();
+
+            await waitSeconds(1);
+          }
+        } else {
+          console.log('Vaga já aplicada!');
         }
-
+      }
     }
 
-      
+    if (j < pages.length) {
+      await waitSeconds(1);
+      console.log('Indo para proxima página!');
+      pages[j].click();
+      await waitSeconds(2);
+    }
+  }
 }
 
+async function jobsList() {
+  await waitUntilElementLocated('artdeco-pagination__pages', 20 * SECOND);
 
-const start = async () => {
-    driver.get("https://www.linkedin.com/");
-    driver.findElement( By.className( "nav__button-secondary" ) ).click();
+  let pages = new Array(1);
+  const pagesList = await driver.findElements(By.className('artdeco-pagination__pages'));
 
-    await loginPage();
+  if (pagesList.length !== 0) {
+    pages = await pagesList[0].findElements(By.tagName('li'));
+  }
 
-    await wait( 3 * SECOND );
-    await driver.get(`https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=${searchTerm}&location=${searchArea}&sortBy=DD`);
-
-    await wait( 2 * SECOND );
-
-    await jobsList();
-
-    console.log(`Finalizado. Aplicado para ${totalApplied} vaga(s)!`)
-   
+  await applyToJobs(pages);
 }
 
+async function start() {
+  driver.get('https://www.linkedin.com/');
+  
+  findElementByClassName('nav__button-secondary').click();
 
-start();
+  await loginPage();
+
+  await waitSeconds(3);
+  await driver.get(`https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=${searchTerm}&location=${searchArea}&sortBy=DD`);
+
+  await waitSeconds(2);
+
+  await jobsList();
+
+  console.log(`Finalizado. Aplicado para ${totalApplied} vaga(s)!`);
+}
+
+setImmediate(() => {
+  start();
+});
