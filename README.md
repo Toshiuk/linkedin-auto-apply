@@ -13,7 +13,7 @@ or
 npm install 
 ````
 
-in `index.js` change the variables:
+in `constans.js` change the variables:
 
 `username`: your username in linkedin
 
